@@ -1,0 +1,135 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+void Create(){
+    string firstName, lastName, middleName, address;
+    char response;
+    
+    do{
+        cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✁┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈" << endl;
+        cout << "\nCreating a new account." << endl;
+
+        cout << "\nEnter your First Name: ";
+        cin.ignore(); // Ignore newline character from previous cin
+        getline(cin, firstName);
+
+        cout << "Enter your Last Name: ";
+        getline(cin, lastName);
+
+        cout << "Enter your Middle Name: ";
+        getline(cin, middleName);
+        
+        cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✁┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈" << endl;
+        cout << "\nConfirming your full name: " << firstName << " " << lastName << " " << middleName << endl;
+    
+        cout << "Is this correct? (Y, N, or X - Exit): ";
+        cin >> response;
+        cin.ignore();
+    
+        if (response == 'X' || response == 'x') {
+            cout << "Exiting the program.\n";
+        }
+    }
+    
+    while (response != 'Y' && response != 'y');{
+        cout << "\nThank you for confirming your name!\n";
+    }
+
+    cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✁┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈" << endl; 
+    cout << "\nPlease enter your address (Country, City, Street, House No.)\nExample: Philippines, Pasay, F. Sanchez St., 215.\n\nPlease enter your Address: " << endl;
+    getline(cin, address);
+    
+}
+
+void Menu(){
+    int choice,new_choice;
+    int Balance = 0, deposit; 
+    char confirm; 
+    
+    do {
+        //Display menu
+        cout << "Menu" << endl;
+        cout << "1) Open a New Account" << endl;
+        cout << "2) Balance Inquiry" << endl;
+        cout << "3) Deposit" << endl;
+        cout << "4) Withdraw" << endl;
+        cout << "5) View Account Information" << endl;
+        cout << "6) Close Account" << endl;
+        cout << "7) Exit.\n" << endl;
+        cout << "Please enter your choice: ";
+        cin >> choice; //Get user input
+        
+        switch (choice) {
+            case 1: // Open or Create a New Account.
+                Create();
+                break;
+            case 2: // Balance Inquiry (Check the balance of account)
+                cout << "Your current balance is: PHP " << Balance << endl;
+                break;
+            case 3: // Deposit 
+            do{ 
+                cout << "Enter the amount you wish to deposit: PHP " << endl; 
+                cin >> deposit; 
+                
+                if (deposit>0){
+                   cout << "Please confirm the amount: PHP " << deposit << " (Y/N)" << endl;
+                   cin >> confirm; 
+                   cin.ignore(); 
+                   
+                   if (confirm == 'Y' || confirm == 'y'){
+                       Balance+=deposit;
+                       cout << "Successfully deposited!" << endl; 
+                       cout << "Your current balance is: PHP " << Balance;
+                       break; 
+                   } else {
+                       cout << "Deposit transaction cancelled." << endl; 
+                   }
+                } else {
+                    cout << "Invalid input of deposit amount." << endl; 
+                }
+            } while (confirm != 'Y' && confirm != 'y');
+                break;
+            case 4: // Withdraw
+                // Code goes here.
+                break;
+            case 5: // View Account Information
+                // Code goes here.
+                break;
+            case 6: // Close Account
+                // Code goes here.
+                break;
+            case 7: // Exits program
+                printf("Press enter to continue...");
+                getchar(); // wait for input, do nothing with it
+                break;
+                
+            default:
+                cout << "Invalid input. Please enter your choice.";
+                cin >> new_choice;
+                choice = new_choice;
+                break;
+        }
+    } 
+    while (choice >=8 || choice <=0);
+}
+
+int main(){
+    Menu();
+    
+    char anythingElse; // changed int to char
+    
+    do {
+        cout << "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━✁┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n" << endl; 
+        cout << "Would you like to do anything else? (Y or N): ";
+        cin >> anythingElse;
+        
+        if (anythingElse == 'N' || anythingElse == 'n') {
+            cout << "Goodbye.\n";
+            break; // Exit the loop
+        }
+    } while (anythingElse != 'Y' && anythingElse != 'y');
+    Menu();
+    return 0;
+}
