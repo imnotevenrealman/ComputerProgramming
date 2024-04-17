@@ -1,0 +1,540 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// Define a struct to represent a permanent ticket
+struct PermanentTicket {
+    string name; // Name given by the user
+    string id;   // Unique ID
+    double balance; // Balance for the ticket
+};
+
+// Define a struct to represent an account
+struct Account {
+    string username;
+    string password;
+    string firstName;
+    string lastName;
+    string middleName;
+    double balance; // Account balance
+    string email;
+    string phoneNumber;
+    vector<PermanentTicket> permanentTickets; // Vector to store permanent tickets
+};
+
+// Function to check if a string contains a special character
+bool containsSpecialChar(const string &str) {
+    const char *specialChars = "!@#$%^&*()-_+=~`[]{}|;:,.<>?";
+    return strpbrk(str.c_str(), specialChars) != nullptr;
+}
+
+// Function to check if username already exists
+bool usernameExists(const vector<Account> &accounts, const string &username) {
+    for (const Account &acc : accounts) {
+        if (acc.username == username) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Function to generate a random ID
+string generateRandomID() {
+    const string charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const int length = 8; // Change the length of the random ID if needed
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, charset.size() - 1);
+    string randomID;
+    for (int i = 0; i < length; ++i) {
+        randomID += charset[dis(gen)];
+    }
+    return randomID;
+}
+
+// Function to read accounts from file
+vector<Account> readAccountsFromFile(const string &filename) {
+    vector<Account> accounts;
+    ifstream file(filename);
+    if (file.is_open()) {
+        string line;
+        while (getline(file, line)) {
+            istringstream iss(line);
+            string username, password, firstName, lastName, middleName, email, phoneNumber;
+            double balance;
+            if (iss >> username >> password >> firstName >> lastName >> middleName >> balance >> email >> phoneNumber) {
+                Account newAccount;
+                newAccount.username = username;
+                newAccount.password = password;
+                newAccount.firstName = firstName;
+                newAccount.lastName = lastName;
+                newAccount.middleName = middleName;
+                newAccount.balance = balance;
+                newAccount.email = email;
+                newAccount.phoneNumber = phoneNumber;
+                // Read permanent tickets associated with the account
+                while (iss >> username >> password) {
+                    newAccount.permanentTickets.push_back({username, password, 50.0}); // Set default balance to 50.0
+                }
+                accounts.push_back(newAccount);
+            }
+        }
+        file.close();
+    }
+    return accounts;
+}
+
+// Function for writing accounts to file
+void writeAccountsToFile(const string &filename, const vector<Account> &accounts) {
+    ofstream file(filename);
+    if (file.is_open()) {
+        for (const Account &acc : accounts) {
+            file << acc.username << " " << acc.password << " " << acc.firstName << " " << acc.lastName << " " << acc.middleName << " " << acc.balance << " " << acc.email << " " << acc.phoneNumber;
+            // Write permanent tickets associated with the account
+            for (const PermanentTicket &ticket : acc.permanentTickets) {
+                file << " " << ticket.name << " " << ticket.id;
+            }
+            file << endl;
+        }
+        file.close();
+    } else {
+        cout << "Unable to open file for writing: " << filename << endl;
+    }
+}
+
+// Function for creating a new account
+void createAccount(vector<Account> &accounts) {
+    string username, password, firstName, lastName, middleName, email, phoneNumber;
+    bool uniqueUsername = false;
+
+    while (!uniqueUsername) {
+        cout << "Enter username: ";
+        getline(cin, username);
+
+        if (usernameExists(accounts, username)) {
+            cout << "Username already exists. Please choose a different username." << endl;
+        } else {
+            uniqueUsername = true;
+        }
+    }
+
+    cout << "Enter first name: ";
+    getline(cin, firstName);
+    cout << "Enter last name: ";
+    getline(cin, lastName);
+    cout << "Enter middle name: ";
+    getline(cin, middleName);
+
+    // Validate password
+    bool validPassword = false;
+    while (!validPassword) {
+        cout << "Enter password: ";
+        getline(cin, password);
+
+        // Check password length
+        if (password.length() < 8) {
+            cout << "Password must be at least 8 characters long." << endl;
+            continue;
+        }
+
+        // Check for at least one uppercase letter
+        bool hasUppercase = false;
+        for (char c : password) {
+            if (isupper(c)) {
+                hasUppercase = true;
+                break;
+            }
+        }
+        if (!hasUppercase) {
+            cout << "Password must contain at least one uppercase letter." << endl;
+            continue;
+        }
+
+        // Check for at least one digit
+        bool hasDigit = false;
+        for (char c : password) {
+            if (isdigit(c)) {
+                hasDigit = true;
+                break;
+            }
+        }
+        if (!hasDigit) {
+            cout << "Password must contain at least one digit." << endl;
+            continue;
+        }
+
+        // Check for at least one special character
+        if (!containsSpecialChar(password)) {
+            cout << "Password must contain at least one special character." << endl;
+            continue;
+        }
+
+        validPassword = true;
+    }
+
+    cout << "Enter email (optional): ";
+    getline(cin, email);
+    cout << "Enter phone number (optional): ";
+    getline(cin, phoneNumber);
+
+    // Create a new account object
+    Account newAccount;
+    newAccount.username = username;
+    newAccount.password = password;
+    newAccount.firstName = firstName;
+    newAccount.lastName = lastName;
+    newAccount.middleName = middleName;
+    newAccount.balance = 0.0; // New accounts start with zero balance
+    newAccount.email = email;
+    newAccount.phoneNumber = phoneNumber;
+
+    // Add the new account to the vector of accounts
+    accounts.push_back(newAccount);
+
+    // Write account to file
+    writeAccountsToFile("accounts.txt", accounts);
+
+    cout << "Account created successfully!" << endl;
+}
+
+// Function for login
+bool login(const vector<Account> &accounts) {
+    string username, password;
+    cout << "Enter username: ";
+    getline(cin, username);
+
+    bool found = false;
+    for (const Account &acc : accounts) {
+        if (acc.username == username) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        cout << "Username not found. Please try again." << endl;
+        return false;
+    }
+
+    while (true) {
+        cout << "Enter password: ";
+        getline(cin, password);
+
+        for (const Account &acc : accounts) {
+            if (acc.username == username && acc.password == password) {
+                cout << "Login successful!" << endl;
+                return true;
+            }
+        }
+
+        cout << "Incorrect password. Try again? (Y/N): ";
+        string choice;
+        getline(cin, choice);
+        if (choice != "Y" && choice != "y") {
+            return false;
+        }
+    }
+}
+
+// Function for purchasing a permanent ticket
+void purchasePermanentTicket(Account &userAccount) {
+    cout << "=== Permanent Ticket Purchase ===" << endl;
+    cout << "Enter ticket name: ";
+    string ticketName;
+    getline(cin, ticketName);
+
+    // Generate a random ticket ID
+    string ticketId = generateRandomID();
+
+    // Create a new permanent ticket object
+    PermanentTicket newTicket;
+    newTicket.name = ticketName;
+    newTicket.id = ticketId;
+    newTicket.balance = 50.0; // Set default balance to 50.0
+
+    // Add the new ticket to the user's account
+    userAccount.permanentTickets.push_back(newTicket);
+
+    cout << "Permanent ticket purchased successfully!" << endl;
+}
+
+// Function for adding balance to a permanent ticket
+void addBalanceToPermanentTicket(PermanentTicket &ticket, double amount) {
+    ticket.balance += amount;
+}
+
+// Function for editing account information
+void editAccountInfo(Account &userAccount) {
+    cout << "=== Account Information ===" << endl;
+    cout << "First Name: " << userAccount.firstName << endl;
+    cout << "Last Name: " << userAccount.lastName << endl;
+    cout << "Middle Name: " << userAccount.middleName << endl;
+    cout << "Account Balance: " << userAccount.balance << endl;
+    cout << "Email: " << userAccount.email << endl;
+    cout << "Phone Number: " << userAccount.phoneNumber << endl;
+
+    cout << "Options:" << endl;
+    cout << "1. Change First Name" << endl;
+    cout << "2. Change Last Name" << endl;
+    cout << "3. Change Middle Name" << endl;
+    cout << "4. Add Balance" << endl;
+    cout << "5. Change Email" << endl;
+    cout << "6. Change Phone Number" << endl;
+    cout << "7. Return to Main Menu" << endl;
+
+    int choice;
+    cin >> choice;
+    cin.ignore();
+
+    switch (choice) {
+    case 1:
+        cout << "Enter new first name: ";
+        getline(cin, userAccount.firstName);
+        break;
+    case 2:
+        cout << "Enter new last name: ";
+        getline(cin, userAccount.lastName);
+        break;
+    case 3:
+        cout << "Enter new middle name: ";
+        getline(cin, userAccount.middleName);
+        break;
+    case 4:
+        double amount;
+        cout << "Enter amount to add: ";
+        cin >> amount;
+        cin.ignore();
+        userAccount.balance += amount;
+        cout << "Balance added successfully. New balance: " << userAccount.balance << endl;
+        break;
+    case 5:
+        cout << "Enter new email: ";
+        getline(cin, userAccount.email);
+        break;
+    case 6:
+        cout << "Enter new phone number: ";
+        getline(cin, userAccount.phoneNumber);
+        break;
+    case 7:
+        cout << "Returning to Main Menu..." << endl;
+        break;
+    default:
+        cout << "Invalid choice." << endl;
+        break;
+    }
+}
+
+// Function for displaying permanent tickets info
+void displayPermanentTickets(const vector<PermanentTicket> &tickets) {
+    cout << "=== Permanent Tickets ===" << endl;
+    for (size_t i = 0; i < tickets.size(); ++i) {
+        cout << i + 1 << ". " << tickets[i].name << " (ID: " << tickets[i].id << ", Balance: " << tickets[i].balance << " PHP)" << endl;
+    }
+}
+
+// Function for adding balance to a permanent ticket
+void addBalanceToPermanentTicket(Account &userAccount) {
+    if (userAccount.permanentTickets.empty()) {
+        cout << "You don't have any permanent tickets." << endl;
+        return;
+    }
+
+    displayPermanentTickets(userAccount.permanentTickets);
+
+    int choice;
+    cout << "Select ticket to add balance: ";
+    cin >> choice;
+    cin.ignore();
+
+    if (choice < 1 || choice > userAccount.permanentTickets.size()) {
+        cout << "Invalid choice." << endl;
+        return;
+    }
+
+    double amount;
+    cout << "Enter amount to add: ";
+    cin >> amount;
+    cin.ignore();
+
+    PermanentTicket &selectedTicket = userAccount.permanentTickets[choice - 1];
+    addBalanceToPermanentTicket(selectedTicket, amount);
+    cout << "Balance added successfully. New balance: " << selectedTicket.balance << " PHP" << endl;
+}
+
+// Function for booking single-use tickets
+void bookSingleUseTicket() {
+    cout << "=== Single-Use Ticket Booking ===" << endl;
+    cout << "Select your route:" << endl;
+    cout << "1. CUBAO - LUCENA" << endl;
+    cout << "2. BALIBAGO STA. ROSA, LAGUNA" << endl;
+    cout << "3. MAUBAN, QUEZON" << endl;
+
+    int routeChoice;
+    cin >> routeChoice;
+    cin.ignore();
+
+    switch (routeChoice) {
+    case 1: {
+        cout << "=== CUBAO - LUCENA Route ===" << endl;
+        cout << "Stops:" << endl;
+        cout << "- ALABANG" << endl;
+        cout << "- TURBINA" << endl;
+        cout << "- STO. TOMAS" << endl;
+        cout << "- ALAMINOS" << endl;
+        cout << "- SAN PABLO" << endl;
+        cout << "- TIAONG (VILLA ESCUDERO)" << endl;
+        cout << "- CANDELARIA" << endl;
+        cout << "- SARIAYA" << endl;
+        cout << "- ARIAS" << endl;
+        cout << "- LUCENA" << endl;
+        cout << "- SM LUCENA" << endl;
+        cout << "- DALAHICAN" << endl;
+        break;
+    }
+    case 2: {
+        cout << "=== BALIBAGO STA. ROSA, LAGUNA Route ===" << endl;
+        cout << "Stops:" << endl;
+        cout << "- BUENDIA" << endl;
+        cout << "- PASAY" << endl;
+        cout << "- MAKATI" << endl;
+        cout << "- MAGALLANES" << endl;
+        cout << "- ENCHANTED KINGDOM" << endl;
+        break;
+    }
+    case 3: {
+        cout << "=== MAUBAN, QUEZON Route ===" << endl;
+        cout << "Stops:" << endl;
+        cout << "- ALABANG" << endl;
+        cout << "- TURBINA" << endl;
+        cout << "- STO. TOMAS" << endl;
+        cout << "- ALAMINOS" << endl;
+        cout << "- TIAONG (VILLA ESCUDERO)" << endl;
+        cout << "- CANDELARIA" << endl;
+        cout << "- SARIAYA" << endl;
+        cout << "- ARIAS" << endl;
+        cout << "- LUCENA" << endl;
+        cout << "- TAYABAS" << endl;
+        break;
+    }
+    default:
+        cout << "Invalid choice." << endl;
+        return;
+    }
+
+    cout << "Your ticket cost is 50 PHP." << endl;
+
+}
+
+// Function for ordering tickets
+void orderTickets(vector<Account> &accounts) {
+    int choice;
+    cout << "=== Ticket Ordering ===" << endl;
+    cout << "1. Single-Use Ticket" << endl;
+    cout << "2. Permanent Ticket" << endl;
+    cout << "Enter your choice: ";
+    cin >> choice;
+    cin.ignore();
+
+    switch (choice) {
+    case 1:
+        // Single-Use Ticket
+        bookSingleUseTicket();
+        break;
+    case 2:
+        // Permanent Ticket
+        if (accounts.empty()) {
+            cout << "You need to create an account first to purchase a permanent ticket." << endl;
+        } else {
+            purchasePermanentTicket(accounts[0]); // For simplicity, purchasing for the first account
+        }
+        break;
+    default:
+        cout << "Invalid choice." << endl;
+        break;
+    }
+}
+
+
+// Function for viewing schedule
+void viewSchedule(const Account &userAccount) {
+    cout << "=== Schedule ===" << endl;
+    // Placeholder for now
+    // Display schedule based on user's ticket info
+    cout << "This functionality is under development." << endl;
+}
+
+// Main menu function
+void mainMenu(vector<Account> &accounts) {
+    int choice;
+    bool loggedIn = false;
+    while (true) {
+        cout << "=== Main Menu ===" << endl;
+        if (!loggedIn) {
+            cout << "1. Login" << endl;
+            cout << "2. Create Account" << endl;
+        } else {
+            cout << "1. Order Tickets" << endl;
+            cout << "2. Booking" << endl;
+            cout << "3. View Schedule" << endl;
+            cout << "4. Account" << endl;
+            cout << "5. Log Out" << endl;
+        }
+        cout << "Enter your choice: ";
+        cin >> choice;
+        cin.ignore();
+
+        switch (choice) {
+        case 1:
+            if (!loggedIn) {
+                loggedIn = login(accounts);
+            } else {
+                orderTickets(accounts);
+            }
+            break;
+        case 2:
+            if (!loggedIn) {
+                createAccount(accounts);  // Only allow creating account if not logged in
+            } else {
+                bookSingleUseTicket();  // Call bookSingleUseTicket() function for booking option
+            }
+            break;
+        case 3:
+            if (loggedIn) {
+                viewSchedule(accounts[0]); // For simplicity, viewing schedule for the first account
+            } else {
+                cout << "Please login first." << endl;
+            }
+            break;
+        case 4:
+            if (loggedIn) {
+                editAccountInfo(accounts[0]); // For simplicity, editing account info for the first account
+            } else {
+                cout << "Please login first." << endl;
+            }
+            break;
+        case 5:
+            if (loggedIn) {
+                cout << "Logging out..." << endl;
+                loggedIn = false;
+            } else {
+                cout << "You are not logged in." << endl;
+            }
+            break;
+        default:
+            cout << "Invalid choice. Please try again." << endl;
+            break;
+        }
+    }
+}
+
+
+int main() {
+    vector<Account> accounts;
+
+    // Load accounts from file
+    accounts = readAccountsFromFile("accounts.txt");
+
+    // Start the main menu
+    mainMenu(accounts);
+
+    return 0;
+}
